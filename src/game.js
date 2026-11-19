@@ -5,7 +5,7 @@ import { Mosquito } from './mosquito.js';
 import { Obstacles } from './obstacles.js';
 import { Nepa } from './nepa.js';
 import { audio } from './audio.js';
-import { ASSETS, drawAsset, boxesOverlap } from './sprites.js';
+import { ASSETS, drawAsset, boxesOverlap, hasImage } from './sprites.js';
 
 const W = CONFIG.WIDTH;
 const H = CONFIG.HEIGHT;
@@ -175,9 +175,9 @@ export class Game {
   // ---- Draw ----
 
   draw(ctx) {
+    // Layers: room (darkened) -> obstacles -> Amos -> score, text and buttons.
     this.drawRoom(ctx);
     this.obstacles.draw(ctx);
-    this.nepa.drawOverlay(ctx);
 
     if (this.state !== 'gameover') {
       const flashS = CONFIG.DEATH_FLASH_MS / 1000;
@@ -208,16 +208,36 @@ export class Game {
     }
   }
 
+  // Fixed bedroom background with the fan and sleeper on it. Only this layer
+  // is darkened; obstacles and Amos are drawn on top afterwards.
   drawRoom(ctx) {
-    // Dark bedroom placeholder: wall, floor, sleeper and fan boxes.
-    ctx.fillStyle = '#1b2433';
-    ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#232d3f';
-    ctx.fillRect(60, 90, 120, 140); // window
-    ctx.fillStyle = '#161c28';
-    ctx.fillRect(0, 560, W, H - 560); // floor
-    drawAsset(ctx, 'fan', { x: 356 - 62, y: 480 - 168, w: 62, h: 168 });
-    drawAsset(ctx, 'sleeper', { x: 118, y: 612 - 114, w: 240, h: 114 });
+    drawAsset(ctx, 'bg_room', { x: 0, y: 0, w: W, h: H });
+
+    const fanKey = this.nepa.isFanOn() ? 'fan_spin' : 'fan_still';
+    drawAsset(ctx, fanKey, {
+      x: CONFIG.FAN_RIGHT_X - CONFIG.FAN_W,
+      y: CONFIG.FAN_BASE_Y - CONFIG.FAN_H,
+      w: CONFIG.FAN_W,
+      h: CONFIG.FAN_H,
+    });
+
+    // Sleeper breathing: the asleep image swells taller from the bed legs.
+    let sleeperKey = 'sleeper_awake';
+    let h = CONFIG.SLEEPER_H;
+    if (!this.nepa.isSleeperAwake()) {
+      sleeperKey = 'sleeper_asleep';
+      const phase = (this.time / CONFIG.BREATH_PERIOD_S) * Math.PI * 2;
+      h *= 1 + CONFIG.BREATH_SWELL * (0.5 - 0.5 * Math.cos(phase));
+    }
+    drawAsset(ctx, sleeperKey, {
+      x: CONFIG.SLEEPER_X,
+      y: CONFIG.SLEEPER_LEGS_Y - h,
+      w: CONFIG.SLEEPER_W,
+      h,
+    });
+
+    this.nepa.drawUnlitBulb(ctx);
+    this.nepa.drawDarkness(ctx);
   }
 
   drawText(ctx, text, x, y, size, color = '#fff', align = 'center') {
@@ -244,8 +264,13 @@ export class Game {
   }
 
   drawTitle(ctx) {
-    this.drawText(ctx, 'Amos Kito', W / 2, 150, 52, '#ffd23f');
-    this.drawText(ctx, 'E No Let Me Sleep!', W / 2, 200, 24, '#fff');
+    if (hasImage('logo')) {
+      const a = ASSETS.logo;
+      drawAsset(ctx, 'logo', { x: (W - a.drawW) / 2, y: 60, w: a.drawW, h: a.drawH });
+    } else {
+      this.drawText(ctx, 'Amos Kito', W / 2, 150, 52, '#ffd23f');
+      this.drawText(ctx, 'E No Let Me Sleep!', W / 2, 200, 24, '#fff');
+    }
     this.drawHint(ctx, 'Tap to fly');
     if (this.best > 0) this.drawText(ctx, `Best: ${this.best} Bites`, W / 2, 470, 18, '#cfd8e3');
   }
@@ -260,7 +285,9 @@ export class Game {
   drawGameOver(ctx) {
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.fillRect(0, 0, W, H);
-    drawAsset(ctx, 'mosquito_dazed', { x: W / 2 - 120, y: 110, w: 240, h: 119 });
+    const dw = CONFIG.DAZED_GAMEOVER_W;
+    const dh = ASSETS.mosquito_dazed.frameH * (dw / ASSETS.mosquito_dazed.frameW);
+    drawAsset(ctx, 'mosquito_dazed', { x: (W - dw) / 2, y: 270 - 24 - dh, w: dw, h: dh });
     this.drawText(ctx, 'Dem don slap you!', W / 2, 290, 32, '#ff6b5b');
     this.drawText(ctx, `Bites: ${this.score}`, W / 2, 360, 28);
     this.drawText(ctx, `Best: ${this.best}`, W / 2, 400, 22, '#cfd8e3');

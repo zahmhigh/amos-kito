@@ -1,7 +1,7 @@
 // Scrolling obstacle pairs: clothes from the top, bedpost or coil from the bottom.
 
 import { CONFIG } from './config.js';
-import { drawAsset, hitboxesFor } from './sprites.js';
+import { drawObstacle, hitboxesFor, buildCoilArt } from './sprites.js';
 
 function randRange(min, max) {
   return min + Math.random() * (max - min);
@@ -21,13 +21,17 @@ export class Obstacles {
     const gap = CONFIG.GAP_SIZE;
     const maxTop = Math.min(CONFIG.LONGEST_TOP, CONFIG.FLOOR_Y - gap - CONFIG.MIN_TOP);
     const gapTop = Math.round(randRange(CONFIG.MIN_TOP, maxTop));
-    this.pairs.push({
+    const pair = {
       x,
       gapTop,
       gapBottom: gapTop + gap,
       bottomKey: Math.random() < 0.5 ? 'bedpost' : 'coil',
       passed: false,
-    });
+      art: {},
+    };
+    // Coil smoke is fitted to this obstacle's length once, at spawn.
+    if (pair.bottomKey === 'coil') pair.art.coil = buildCoilArt(CONFIG.FLOOR_Y - pair.gapBottom);
+    this.pairs.push(pair);
   }
 
   // Returns the number of pairs passed this step.
@@ -76,8 +80,8 @@ export class Obstacles {
   draw(ctx) {
     for (const p of this.pairs) {
       const r = this.rects(p);
-      drawAsset(ctx, r.top.key, r.top.rect);
-      drawAsset(ctx, r.bottom.key, r.bottom.rect);
+      drawObstacle(ctx, r.top.key, r.top.rect, p.art);
+      drawObstacle(ctx, r.bottom.key, r.bottom.rect, p.art);
     }
   }
 }

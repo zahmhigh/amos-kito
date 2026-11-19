@@ -91,6 +91,7 @@ function frame(now) {
   const k = scale * dpr;
   ctx.setTransform(k, 0, 0, k, 0, 0);
   ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   game.draw(ctx);
 
   requestAnimationFrame(frame);

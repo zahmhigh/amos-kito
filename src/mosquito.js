@@ -1,7 +1,7 @@
 // Amos Kito, the player mosquito. Fixed x, moves only up and down.
 
 import { CONFIG } from './config.js';
-import { ASSETS, drawAsset, hitboxesFor } from './sprites.js';
+import { ASSETS, drawSprite, frameAt, hitboxesFor } from './sprites.js';
 
 export class Mosquito {
   constructor() {
@@ -56,6 +56,8 @@ export class Mosquito {
     return hb.y + hb.h >= CONFIG.FLOOR_Y;
   }
 
+  // During the death sequence animTime stops advancing, so Amos stays frozen
+  // on one wing-flap frame while he flashes and spins.
   draw(ctx, { flash = false, dazed = false } = {}) {
     const key = dazed ? 'mosquito_dazed' : 'mosquito';
     const a = ASSETS[key];
@@ -63,21 +65,7 @@ export class Mosquito {
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
     const rect = { x: -a.drawW / 2, y: -a.drawH / 2, w: a.drawW, h: a.drawH };
-    if (flash) {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(rect.x + 8, rect.y + 8, rect.w - 16, rect.h - 16);
-    } else {
-      drawAsset(ctx, key, rect, this.animTime);
-      if (!dazed) this.drawWingFlicker(ctx, rect);
-    }
+    drawSprite(ctx, key, rect, dazed ? 0 : frameAt('mosquito', this.animTime), { white: flash });
     ctx.restore();
-  }
-
-  // Placeholder wing motion so the box version still feels alive.
-  drawWingFlicker(ctx, rect) {
-    const frame = Math.floor(this.animTime * ASSETS.mosquito.fps) % 4;
-    const lift = [0, 4, 8, 4][frame];
-    ctx.fillStyle = 'rgba(230,240,245,0.85)';
-    ctx.fillRect(rect.x + 20, rect.y + 4 + lift, 18, 6);
   }
 }
