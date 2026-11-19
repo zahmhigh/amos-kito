@@ -3,6 +3,7 @@
 import { CONFIG } from './config.js';
 import { Game } from './game.js';
 import { loadAssets } from './sprites.js';
+import { audio } from './audio.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -51,6 +52,8 @@ window.addEventListener('pointerdown', (e) => {
 for (const type of ['touchstart', 'touchmove', 'touchend', 'gesturestart', 'dblclick']) {
   window.addEventListener(type, (e) => e.preventDefault(), { passive: false });
 }
+// Older iOS only unlocks audio from touchend, so try there too.
+window.addEventListener('touchend', () => audio.unlock(), { passive: true });
 window.addEventListener('contextmenu', (e) => e.preventDefault());
 
 window.addEventListener('keydown', (e) => {
@@ -58,14 +61,21 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     if (e.repeat) return; // holding Space never repeats
     game.press(-1, -1);
-  } else if (e.code === 'KeyD' && !e.repeat) {
+  } else if (e.repeat) {
+    // ignore held keys
+  } else if (e.code === 'KeyD') {
     game.toggleDebug();
+  } else if (e.code === 'KeyM') {
+    game.toggleMute();
+  } else if (e.code === 'KeyN') {
+    game.debugNepa(); // debug: trigger the NEPA event now
   }
 });
 
 // ---- Pause when hidden ----
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) game.onHidden();
+  audio.setHidden(document.hidden); // all sound stops while the tab is hidden
 });
 window.addEventListener('pagehide', () => game.onHidden());
 window.addEventListener('blur', () => game.onHidden());

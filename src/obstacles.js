@@ -7,6 +7,21 @@ function randRange(min, max) {
   return min + Math.random() * (max - min);
 }
 
+// Difficulty ramp: speed and gap for a given score.
+function rampSteps(bites, every) {
+  return Math.floor(Math.max(0, bites - CONFIG.RAMP_START_BITES) / every);
+}
+
+export function speedFor(bites) {
+  const s = CONFIG.SCROLL_SPEED + CONFIG.RAMP_SPEED_STEP * rampSteps(bites, CONFIG.RAMP_SPEED_EVERY);
+  return Math.min(s, CONFIG.RAMP_SPEED_MAX);
+}
+
+export function gapFor(bites) {
+  const g = CONFIG.GAP_SIZE - CONFIG.RAMP_GAP_STEP * rampSteps(bites, CONFIG.RAMP_GAP_EVERY);
+  return Math.max(g, CONFIG.RAMP_GAP_MIN);
+}
+
 export class Obstacles {
   constructor() {
     this.reset();
@@ -15,10 +30,17 @@ export class Obstacles {
   reset() {
     this.pairs = [];
     this.nextX = CONFIG.FIRST_PAIR_X;
+    this.setBites(0);
+  }
+
+  // Called with the current score; new pairs use the gap, all pairs the speed.
+  setBites(bites) {
+    this.speed = speedFor(bites);
+    this.gap = gapFor(bites);
   }
 
   spawn(x) {
-    const gap = CONFIG.GAP_SIZE;
+    const gap = this.gap;
     const maxTop = Math.min(CONFIG.LONGEST_TOP, CONFIG.FLOOR_Y - gap - CONFIG.MIN_TOP);
     const gapTop = Math.round(randRange(CONFIG.MIN_TOP, maxTop));
     const pair = {
@@ -36,7 +58,7 @@ export class Obstacles {
 
   // Returns the number of pairs passed this step.
   update(dt, mosquitoLeft) {
-    const dx = CONFIG.SCROLL_SPEED * dt;
+    const dx = this.speed * dt;
     const period = CONFIG.OBSTACLE_WIDTH + CONFIG.PAIR_SPACING;
 
     for (const p of this.pairs) p.x -= dx;

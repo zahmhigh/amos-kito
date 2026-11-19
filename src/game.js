@@ -27,7 +27,12 @@ function saveBest(v) {
   }
 }
 
-const RESTART_BTN = { x: W / 2 - 90, y: 500, w: 180, h: 56 };
+const RESTART_BTN = { x: W / 2 - 90, y: 510, w: 180, h: 56 };
+const MUTE_BTN = CONFIG.MUTE_BTN;
+
+function inRect(x, y, r) {
+  return x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+}
 
 export class Game {
   constructor() {
@@ -38,6 +43,8 @@ export class Game {
     this.debug = false;
     this.time = 0;
     this.state = 'title';
+    this.lastLine = -1;
+    this.gameOverLine = '';
     this.resetRound();
   }
 
@@ -49,6 +56,7 @@ export class Game {
     this.newBest = false;
     this.deathT = 0;
     this.gameOverAt = 0;
+    this.shakeT = 0;
   }
 
   // ---- Input ----
@@ -56,14 +64,19 @@ export class Game {
   // One press = one action. Buttons consume the press, so they never also flap.
   press(x, y) {
     audio.unlock();
+    // Mute button works in every state and does nothing else.
+    if (inRect(x, y, MUTE_BTN)) {
+      audio.toggleMute();
+      return;
+    }
     switch (this.state) {
       case 'title':
       case 'ready':
         this.state = 'playing';
-        this.mosquito.flap();
+        this.flap();
         break;
       case 'playing':
-        this.mosquito.flap();
+        this.flap();
         break;
       case 'paused':
         // The whole screen is the Resume button: resume only, no flap.
@@ -82,8 +95,23 @@ export class Game {
     }
   }
 
+  flap() {
+    this.mosquito.flap();
+    audio.flap();
+  }
+
+  toggleMute() {
+    audio.unlock();
+    audio.toggleMute();
+  }
+
   toggleDebug() {
     this.debug = !this.debug;
+  }
+
+  // Debug (N key): start the NEPA event now.
+  debugNepa() {
+    if (this.state === 'playing') this.nepa.trigger();
   }
 
   onHidden() {
@@ -97,6 +125,7 @@ export class Game {
 
   update(dt) {
     this.time += dt;
+    this.shakeT = Math.max(0, this.shakeT - dt);
     const m = this.mosquito;
 
     switch (this.state) {
@@ -108,6 +137,7 @@ export class Game {
       case 'playing': {
         const bonus = this.nepa.update(dt, this.score); // +3 when the light cuts
         m.update(dt, this.nepa.gust()); // gusts move position, not flap speed
+        this.obstacles.setBites(this.score); // difficulty ramp
         const passed = this.obstacles.update(dt, m.hitbox.x);
         this.score += passed + bonus;
         if (this.checkHit()) this.startDeath();
@@ -121,6 +151,29 @@ export class Game {
       default:
         break; // paused, gameover: frozen
     }
+
+    // Continuous sounds follow the game state.
+    const alive = this.state === 'title' || this.state === 'ready' || this.state === 'playing';
+    audio.update({
+      buzz: alive,
+      asleep: !this.nepa.isSleeperAwake(),
+      breathPhase: this.breathPhase(),
+      dark: !this.nepa.isLit(),
+    });
+  }
+
+  // 0..2π over one breath; the sleeper swells (and snores) in the first half.
+  breathPhase() {
+    return ((this.time / CONFIG.BREATH_PERIOD_S) % 1) * Math.PI * 2;
+  }
+
+  pickGameOverLine() {
+    const lines = CONFIG.GAME_OVER_LINES;
+    if (!lines.length) { this.gameOverLine = ''; return; }
+    let i = Math.floor(Math.random() * lines.length);
+    if (lines.length > 1 && i === this.lastLine) i = (i + 1) % lines.length;
+    this.lastLine = i;
+    this.gameOverLine = lines[i];
   }
 
   checkHit() {
@@ -137,7 +190,9 @@ export class Game {
     this.state = 'dying';
     this.deathT = 0;
     this.mosquito.vy = 0;
+    this.shakeT = CONFIG.SHAKE_S;
     audio.play('slap');
+    audio.play('demDonSlapYou', CONFIG.VOICE_AFTER_SLAP_S);
   }
 
   updateDeath(dt) {
@@ -164,6 +219,7 @@ export class Game {
   enterGameOver() {
     this.state = 'gameover';
     this.gameOverAt = performance.now();
+    this.pickGameOverLine();
     if (this.score > this.best) {
       this.best = this.score;
       this.newBest = true;
@@ -175,6 +231,16 @@ export class Game {
 
   draw(ctx) {
     // Layers: room (darkened) -> obstacles -> Amos -> score, text and buttons.
+    // The slap shakes the world layers only; text and buttons stay steady.
+    ctx.save();
+    if (this.shakeT > 0) {
+      const k = this.shakeT / CONFIG.SHAKE_S;
+      const amp = CONFIG.SHAKE_PX * k;
+      const zoom = 1 + (2 * CONFIG.SHAKE_PX) / W; // hide the edges while shaking
+      ctx.translate(W / 2 + Math.sin(this.time * 97) * amp, H / 2 + Math.cos(this.time * 83) * amp);
+      ctx.scale(zoom, zoom);
+      ctx.translate(-W / 2, -H / 2);
+    }
     this.drawRoom(ctx);
     this.obstacles.draw(ctx, { lit: this.nepa.isLit(), sway: this.nepa.clothesSway() });
     this.nepa.drawWind(ctx);
@@ -189,6 +255,7 @@ export class Game {
     }
 
     if (this.debug) this.drawHitboxes(ctx);
+    ctx.restore();
 
     switch (this.state) {
       case 'title': this.drawTitle(ctx); break;
@@ -200,12 +267,53 @@ export class Game {
       default: break;
     }
 
+    this.drawMuteButton(ctx);
+
     if (this.debug) {
       ctx.fillStyle = '#ff4d4d';
       ctx.font = 'bold 12px system-ui, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText('DEBUG (D)', 8, H - 10);
+      ctx.fillText('DEBUG (D) · N = NEPA', 8, H - 10);
     }
+  }
+
+  // Speaker icon, top right. Crossed out when muted.
+  drawMuteButton(ctx) {
+    const b = MUTE_BTN;
+    const cx = b.x + b.w / 2;
+    const cy = b.y + b.h / 2;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, b.w / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    // Speaker body
+    ctx.beginPath();
+    ctx.moveTo(cx - 10, cy - 4);
+    ctx.lineTo(cx - 5, cy - 4);
+    ctx.lineTo(cx + 1, cy - 9);
+    ctx.lineTo(cx + 1, cy + 9);
+    ctx.lineTo(cx - 5, cy + 4);
+    ctx.lineTo(cx - 10, cy + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    if (audio.muted) {
+      ctx.moveTo(cx + 5, cy - 5);
+      ctx.lineTo(cx + 12, cy + 5);
+      ctx.moveTo(cx + 12, cy - 5);
+      ctx.lineTo(cx + 5, cy + 5);
+    } else {
+      ctx.arc(cx + 2, cy, 6, -0.9, 0.9);
+      ctx.moveTo(cx + 2 + 10 * Math.cos(-0.9), cy + 10 * Math.sin(-0.9));
+      ctx.arc(cx + 2, cy, 10, -0.9, 0.9);
+    }
+    ctx.stroke();
+    ctx.restore();
   }
 
   // Fixed bedroom background with the fan and sleeper on it. Only this layer
@@ -228,8 +336,7 @@ export class Game {
     let h = CONFIG.SLEEPER_H;
     if (!this.nepa.isSleeperAwake()) {
       sleeperKey = 'sleeper_asleep';
-      const phase = (this.time / CONFIG.BREATH_PERIOD_S) * Math.PI * 2;
-      h *= 1 + CONFIG.BREATH_SWELL * (0.5 - 0.5 * Math.cos(phase));
+      h *= 1 + CONFIG.BREATH_SWELL * (0.5 - 0.5 * Math.cos(this.breathPhase()));
     }
     drawAsset(ctx, sleeperKey, {
       x: CONFIG.SLEEPER_X,
@@ -295,9 +402,10 @@ export class Game {
     const dh = ASSETS.mosquito_dazed.frameH * (dw / ASSETS.mosquito_dazed.frameW);
     drawAsset(ctx, 'mosquito_dazed', { x: (W - dw) / 2, y: 270 - 24 - dh, w: dw, h: dh });
     this.drawText(ctx, 'Dem don slap you!', W / 2, 290, 32, '#ff6b5b');
-    this.drawText(ctx, `Bites: ${this.score}`, W / 2, 360, 28);
-    this.drawText(ctx, `Best: ${this.best}`, W / 2, 400, 22, '#cfd8e3');
-    if (this.newBest) this.drawText(ctx, 'New best!', W / 2, 440, 20, '#ffd23f');
+    if (this.gameOverLine) this.drawText(ctx, this.gameOverLine, W / 2, 328, 18, '#ffe7c2');
+    this.drawText(ctx, `Bites: ${this.score}`, W / 2, 380, 28);
+    this.drawText(ctx, `Best: ${this.best}`, W / 2, 418, 22, '#cfd8e3');
+    if (this.newBest) this.drawText(ctx, 'New best!', W / 2, 456, 20, '#ffd23f');
 
     const ready = performance.now() - this.gameOverAt >= CONFIG.RESTART_LOCK_MS;
     const b = RESTART_BTN;

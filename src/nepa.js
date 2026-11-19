@@ -124,7 +124,8 @@ export class Nepa {
         this.bulbOn = true;
         this.shoutT = CONFIG.UP_NEPA_TEXT_S;
         audio.play('switch');
-        audio.play('upNepa');
+        audio.play('bulbBuzz');
+        audio.play('upNepa', 0.15);
         break;
       case 'fade':
         this.bulbOn = true;
@@ -140,6 +141,9 @@ export class Nepa {
       case 'lit':
         this.light = 1;
         break;
+      case 'cutwarn':
+        audio.play('bulbBuzz');
+        break;
       case 'idle':
         // Power cut.
         this.light = 0;
@@ -150,12 +154,18 @@ export class Nepa {
         this.first = false;
         this.idleT = 0;
         this.nextAt = rand(CONFIG.NEPA_EVERY_MIN_S, CONFIG.NEPA_EVERY_MAX_S);
+        audio.play('powerCut');
         audio.play('fanOff');
-        audio.play('nepaTookLight');
+        audio.play('nepaTookLight', 0.1);
         break;
       default:
         break;
     }
+  }
+
+  // Debug (N key): start the power event right away if the room is dark.
+  trigger() {
+    if (this.state === 'idle') this.enter('flicker');
   }
 
   // Gusts start only after the fan has visibly spun up, and die down during

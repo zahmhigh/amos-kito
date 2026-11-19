@@ -20,13 +20,27 @@ export const CONFIG = {
   DEATH_SPIN_TURNS: 1.5,    // turns during the spin
   DEATH_DAZED_S: 0.5,       // dazed image in the room before game over
 
-  // Phase 4 ramp values (not used yet; speed and gap stay fixed)
-  RAMP_SPEED_STEP: 5,       // +px/s
-  RAMP_SPEED_EVERY: 10,     // bites
-  RAMP_SPEED_MAX: 260,      // px/s
-  RAMP_GAP_STEP: 4,         // −px
-  RAMP_GAP_EVERY: 5,        // bites
-  RAMP_GAP_MIN: 150,        // px
+  // Difficulty ramp (Phase 4). Starts from SCROLL_SPEED and GAP_SIZE.
+  RAMP_START_BITES: 0,      // bites before the ramp begins (raise to give a grace period)
+  RAMP_SPEED_STEP: 5,       // +px/s...
+  RAMP_SPEED_EVERY: 10,     // ...every 10 bites
+  RAMP_SPEED_MAX: 260,      // px/s cap
+  RAMP_GAP_STEP: 4,         // −px...
+  RAMP_GAP_EVERY: 5,        // ...every 5 bites
+  RAMP_GAP_MIN: 150,        // px floor
+
+  // Screen shake on the slap
+  SHAKE_PX: 5,
+  SHAKE_S: 0.28,
+
+  // Game over: one of these rotates under "Dem don slap you!" (never the same
+  // twice in a row). Drafts: rewrite or add your own so they sound like real speech.
+  GAME_OVER_LINES: [
+    'Oga don wake.',
+    'Small blood, big wahala.',
+    'Na hand you go jam.',
+    'You no hear say e don wake?',
+  ],
 
   // --- Screen ---
   WIDTH: 360,
@@ -103,6 +117,36 @@ export const CONFIG = {
   WIND_ALPHA_MIN: 0.25,     // wind lines while the fan spins up (warning)
   WIND_ALPHA_MAX: 0.6,      // wind lines at full gust
 
+  // --- Sound (Phase 4) ---
+  MASTER_VOLUME: 0.8,
+  BUZZ_HZ: 560,             // mosquito whine
+  BUZZ_VOL: 0.05,
+  BUZZ_FLAP_RISE: 1.18,     // pitch jumps 18% on each flap...
+  BUZZ_FLAP_GLIDE_S: 0.12,  // ...then glides back
+  SNORE_VOL: 0.22,
+  GENERATOR_VOL: 0.05,      // distant, only while dark
+  FAN_VOL: 0.12,
+  FAN_WINDDOWN_S: 0.9,
+  BULB_BUZZ_VOL: 0.08,
+  SLAP_VOL: 0.7,
+  VOICE_VOL: 1,
+  VOICE_AFTER_SLAP_S: 0.3,  // "Dem don slap you!" starts this long after the slap
+  // Recorded files (put them in assets/audio/ and set the path; null = none).
+  // Voice lines only play from files. Setting a path for an effect
+  // (switch, bulbBuzz, powerCut, slap) replaces its synthesised sound.
+  AUDIO_FILES: {
+    upNepa: null,           // e.g. 'assets/audio/up_nepa.mp3'
+    nepaTookLight: null,    // e.g. 'assets/audio/nepa_took_light.mp3'
+    demDonSlapYou: null,    // e.g. 'assets/audio/dem_don_slap_you.mp3'
+    switch: null,
+    bulbBuzz: null,
+    powerCut: null,
+    slap: null,
+  },
+
+  // Mute button (top right)
+  MUTE_BTN: { x: 314, y: 14, w: 36, h: 36 },
+
   // --- Layout / feel ---
   MOSQUITO_X: 96,           // fixed horizontal centre of the mosquito
   MOSQUITO_START_Y: 300,
@@ -114,4 +158,5 @@ export const CONFIG = {
 
   // --- Storage ---
   BEST_KEY: 'amoskito.best',
+  MUTE_KEY: 'amoskito.muted',
 };
