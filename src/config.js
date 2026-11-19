@@ -156,6 +156,12 @@ export const CONFIG = {
   HOVER_PERIOD_S: 1.2,
   RESTART_LOCK_MS: 300,     // ignore taps right after game over appears
 
+  // --- Sharing (Phase 5) ---
+  // Shared links always point here, wherever the game was played.
+  SHARE_URL: 'https://amos-kito.banjezamai.workers.dev/',
+  SHARE_TEXT: 'Amos Kito survived {n}. This mosquito no gree sleep. Beat my score!',
+  TOAST_MS: 1600,
+
   // --- Storage ---
   BEST_KEY: 'amoskito.best',
   MUTE_KEY: 'amoskito.muted',

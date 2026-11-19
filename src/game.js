@@ -27,7 +27,30 @@ function saveBest(v) {
   }
 }
 
-const RESTART_BTN = { x: W / 2 - 90, y: 510, w: 180, h: 56 };
+const RESTART_BTN = { x: W / 2 - 90, y: 494, w: 180, h: 56 };
+const SHARE_BTN = { x: W / 2 - 90, y: 558, w: 180, h: 44 };
+
+function shareMessage(score) {
+  const n = `${score} obstacle${score === 1 ? '' : 's'}`;
+  return CONFIG.SHARE_TEXT.replace('{n}', n);
+}
+
+// Copy text without the async Clipboard API (older browsers, non-HTTPS).
+function legacyCopy(text) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) {
+    return false;
+  }
+}
 const MUTE_BTN = CONFIG.MUTE_BTN;
 
 function inRect(x, y, r) {
@@ -57,6 +80,9 @@ export class Game {
     this.deathT = 0;
     this.gameOverAt = 0;
     this.shakeT = 0;
+    this.sharePressed = false;
+    this.toast = '';
+    this.toastUntil = 0;
   }
 
   // ---- Input ----
@@ -84,8 +110,14 @@ export class Game {
         audio.resumeAll();
         break;
       case 'gameover':
+        // Share fires on release (browsers only allow the share sheet from a
+        // completed tap), so here the press is just held for release().
+        if (inRect(x, y, SHARE_BTN)) {
+          this.sharePressed = true;
+          return;
+        }
         if (performance.now() - this.gameOverAt < CONFIG.RESTART_LOCK_MS) return;
-        // The Restart button, or a tap anywhere: restart only, never a flap.
+        // The Restart button, or a tap anywhere else: restart only, never a flap.
         // The new round waits on the "ready" screen for its first flap.
         this.resetRound();
         this.state = 'ready';
@@ -93,6 +125,42 @@ export class Game {
       default:
         break; // dying: ignore
     }
+  }
+
+  // Pointer / key released. Only the Share button acts on release.
+  release(x, y) {
+    const pressed = this.sharePressed;
+    this.sharePressed = false;
+    if (pressed && this.state === 'gameover' && inRect(x, y, SHARE_BTN)) this.share();
+  }
+
+  // Phone share sheet if there is one, otherwise copy the message and link.
+  share() {
+    const text = shareMessage(this.score);
+    const url = CONFIG.SHARE_URL;
+    if (navigator.share) {
+      navigator.share({ title: document.title, text, url }).catch((e) => {
+        // Cancelled by the player: do nothing. Any other failure: copy instead.
+        if (!e || e.name !== 'AbortError') this.copyShare(text, url);
+      });
+      return;
+    }
+    this.copyShare(text, url);
+  }
+
+  copyShare(text, url) {
+    const full = `${text} ${url}`;
+    const done = (ok) => this.showToast(ok ? 'Link copied!' : 'Could not copy the link');
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(full).then(() => done(true), () => done(legacyCopy(full)));
+    } else {
+      done(legacyCopy(full));
+    }
+  }
+
+  showToast(text) {
+    this.toast = text;
+    this.toastUntil = performance.now() + CONFIG.TOAST_MS;
   }
 
   flap() {
@@ -420,6 +488,29 @@ export class Game {
     ctx.fillStyle = '#1b2433';
     ctx.fillText('Fly again', W / 2, b.y + b.h / 2);
     ctx.globalAlpha = 1;
+
+    // Share: outlined, secondary to "Fly again".
+    const s = SHARE_BTN;
+    ctx.fillStyle = this.sharePressed ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)';
+    ctx.strokeStyle = '#ffd23f';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(s.x, s.y, s.w, s.h, 14) : ctx.rect(s.x, s.y, s.w, s.h);
+    ctx.fill();
+    ctx.stroke();
+    ctx.font = '800 20px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#ffd23f';
+    ctx.fillText('Share score', W / 2, s.y + s.h / 2);
+
+    if (this.toast && performance.now() < this.toastUntil) {
+      ctx.fillStyle = 'rgba(0,0,0,0.75)';
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(W / 2 - 110, 607, 220, 28, 10) : ctx.rect(W / 2 - 110, 607, 220, 28);
+      ctx.fill();
+      ctx.font = '700 15px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = '#fff';
+      ctx.fillText(this.toast, W / 2, 621);
+    }
   }
 
   drawHitboxes(ctx) {

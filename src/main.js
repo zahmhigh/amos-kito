@@ -48,6 +48,14 @@ window.addEventListener('pointerdown', (e) => {
   game.press(p.x, p.y);
 }, { passive: false });
 
+// Release: the Share button acts here, because the share sheet and clipboard
+// need a completed tap.
+window.addEventListener('pointerup', (e) => {
+  const p = toLogical(e.clientX, e.clientY);
+  game.release(p.x, p.y);
+});
+window.addEventListener('pointercancel', () => game.release(-1, -1));
+
 // Block scrolling, pinch and double-tap zoom.
 for (const type of ['touchstart', 'touchmove', 'touchend', 'gesturestart', 'dblclick']) {
   window.addEventListener(type, (e) => e.preventDefault(), { passive: false });
