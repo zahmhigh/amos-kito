@@ -37,10 +37,12 @@ export class Mosquito {
     this.vy = 0;
   }
 
-  update(dt) {
+  // `drift` (px/s) is the fan gust: added straight to position, never to vy,
+  // because every flap resets vy and would cancel it.
+  update(dt, drift = 0) {
     this.animTime += dt;
     this.vy = Math.min(this.vy + CONFIG.GRAVITY * dt, CONFIG.MAX_FALL_SPEED);
-    this.y += this.vy * dt;
+    this.y += (this.vy + drift) * dt;
 
     // Ceiling: stop at the top edge and kill upward speed.
     const hb = this.hitbox;

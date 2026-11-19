@@ -106,11 +106,10 @@ export class Game {
         break;
 
       case 'playing': {
-        this.nepa.update(dt);
-        m.update(dt);
-        m.y += this.nepa.gust() * dt; // gusts move position, not flap speed
+        const bonus = this.nepa.update(dt, this.score); // +3 when the light cuts
+        m.update(dt, this.nepa.gust()); // gusts move position, not flap speed
         const passed = this.obstacles.update(dt, m.hitbox.x);
-        this.score += passed;
+        this.score += passed + bonus;
         if (this.checkHit()) this.startDeath();
         break;
       }
@@ -177,7 +176,8 @@ export class Game {
   draw(ctx) {
     // Layers: room (darkened) -> obstacles -> Amos -> score, text and buttons.
     this.drawRoom(ctx);
-    this.obstacles.draw(ctx);
+    this.obstacles.draw(ctx, { lit: this.nepa.isLit(), sway: this.nepa.clothesSway() });
+    this.nepa.drawWind(ctx);
 
     if (this.state !== 'gameover') {
       const flashS = CONFIG.DEATH_FLASH_MS / 1000;
@@ -194,8 +194,8 @@ export class Game {
       case 'title': this.drawTitle(ctx); break;
       case 'ready': this.drawScore(ctx); this.drawHint(ctx, 'Tap to fly'); break;
       case 'playing':
-      case 'dying': this.drawScore(ctx); break;
-      case 'paused': this.drawScore(ctx); this.drawPaused(ctx); break;
+      case 'dying': this.drawScore(ctx); this.drawNepaHud(ctx); break;
+      case 'paused': this.drawScore(ctx); this.drawNepaHud(ctx); this.drawPaused(ctx); break;
       case 'gameover': this.drawGameOver(ctx); break;
       default: break;
     }
@@ -213,10 +213,12 @@ export class Game {
   drawRoom(ctx) {
     drawAsset(ctx, 'bg_room', { x: 0, y: 0, w: W, h: H });
 
+    // Fan: spinning image and a ~1 px shake while the power is on.
     const fanKey = this.nepa.isFanOn() ? 'fan_spin' : 'fan_still';
+    const shake = this.nepa.fanShake(this.time);
     drawAsset(ctx, fanKey, {
-      x: CONFIG.FAN_RIGHT_X - CONFIG.FAN_W,
-      y: CONFIG.FAN_BASE_Y - CONFIG.FAN_H,
+      x: CONFIG.FAN_RIGHT_X - CONFIG.FAN_W + shake.x,
+      y: CONFIG.FAN_BASE_Y - CONFIG.FAN_H + shake.y,
       w: CONFIG.FAN_W,
       h: CONFIG.FAN_H,
     });
@@ -250,6 +252,10 @@ export class Game {
     ctx.strokeText(text, x, y);
     ctx.fillStyle = color;
     ctx.fillText(text, x, y);
+  }
+
+  drawNepaHud(ctx) {
+    this.nepa.drawHud(ctx, (text, x, y, size, color) => this.drawText(ctx, text, x, y, size, color));
   }
 
   drawScore(ctx) {

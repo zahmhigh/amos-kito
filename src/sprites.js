@@ -312,10 +312,16 @@ export function drawSprite(ctx, key, rect, frame = 0, { white = false } = {}) {
 
 // Coil art for one obstacle: the coil (bottom 90 px of the image) stays on the
 // floor; the smoke above is trimmed or stretched to fit, top faded out.
-// Built once per obstacle pair and cached on it.
+// Built once per obstacle pair and cached on it, in a dark and a lit version.
 export function buildCoilArt(lengthPx) {
-  const src = darkened.coil;
-  if (!src) return null;
+  if (!images.coil) return null;
+  return {
+    dark: fitCoil(darkened.coil || images.coil, lengthPx),
+    lit: fitCoil(images.coil, lengthPx),
+  };
+}
+
+function fitCoil(src, lengthPx) {
   const a = ASSETS.coil;
   const scale = a.frameW / a.drawW;                // source px per screen px (2)
   const baseSrc = CONFIG.COIL_BASE_SRC_H;
@@ -349,21 +355,31 @@ export function buildCoilArt(lengthPx) {
 
 // Draw an obstacle into its column rect, cropping the tall image by its anchor.
 // `cache` holds per-pair art (the coil); the canvas edge does the cropping.
-export function drawObstacle(ctx, key, rect, cache) {
+// In the dark, obstacles use their lightly darkened version; when lit, the
+// original. `sway` (px) leans the hanging clothes in the wind (visual only).
+export function drawObstacle(ctx, key, rect, cache, { lit = false, sway = 0 } = {}) {
   const a = ASSETS[key];
-  const img = darkened[key];
+  const img = lit ? images[key] : (darkened[key] || images[key]);
   if (!img) { drawPlaceholder(ctx, key, rect); return; }
   const x = rect.x + (a.offsetX || 0);
 
   if (key === 'coil') {
     const art = cache && cache.coil;
     if (!art) { drawPlaceholder(ctx, key, rect); return; }
-    ctx.drawImage(art, x, rect.y, a.drawW, rect.h);
+    ctx.drawImage(lit ? art.lit : art.dark, x, rect.y, a.drawW, rect.h);
     return;
   }
   if (a.anchor === 'bottom') {
     // Bottom of the image at the rect's bottom; anything above y=0 is off screen.
-    ctx.drawImage(img, x, rect.y + rect.h - a.drawH, a.drawW, a.drawH);
+    if (sway && key === 'clothes' && rect.h > 0) {
+      // Hung from a line above the screen: skew so the bottom swings most.
+      ctx.save();
+      ctx.transform(1, 0, sway / rect.h, 1, 0, 0);
+      ctx.drawImage(img, x, rect.y + rect.h - a.drawH, a.drawW, a.drawH);
+      ctx.restore();
+    } else {
+      ctx.drawImage(img, x, rect.y + rect.h - a.drawH, a.drawW, a.drawH);
+    }
   } else {
     // Top of the image at the rect's top; the base runs off the bottom.
     ctx.drawImage(img, x, rect.y, a.drawW, a.drawH);

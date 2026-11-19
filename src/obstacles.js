@@ -77,11 +77,11 @@ export class Obstacles {
     return out;
   }
 
-  draw(ctx) {
+  draw(ctx, opts = {}) {
     for (const p of this.pairs) {
       const r = this.rects(p);
-      drawObstacle(ctx, r.top.key, r.top.rect, p.art);
-      drawObstacle(ctx, r.bottom.key, r.bottom.rect, p.art);
+      drawObstacle(ctx, r.top.key, r.top.rect, p.art, opts);
+      drawObstacle(ctx, r.bottom.key, r.bottom.rect, p.art, opts);
     }
   }
 }

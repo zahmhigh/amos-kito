@@ -74,6 +74,35 @@ export const CONFIG = {
   MOON_R: 110,
   MOON_STRENGTH: 0.25,      // how much the window cuts through the darkness
 
+  // --- NEPA power event (Phase 3) ---
+  NEPA_FIRST_MIN_S: 8,      // first power return 8–12 s into a round...
+  NEPA_FIRST_MAX_S: 12,
+  NEPA_FIRST_MIN_BITES: 3,  // ...and only after at least 3 pairs passed
+  NEPA_EVERY_MIN_S: 20,     // then every 20–30 s (counted from the last cut)
+  NEPA_EVERY_MAX_S: 30,
+  NEPA_FLICKER_S: 0.3,      // warning: bulb flickers before the light comes
+  NEPA_FADE_S: 0.4,         // overlay fades dark -> fully lit
+  NEPA_LIT_MIN_S: 5,        // power lasts 5–7 s (from the fade starting)
+  NEPA_LIT_MAX_S: 7,
+  NEPA_CUT_WARN_S: 0.35,    // warning: bulb stutters and gusts die down before the cut
+  NEPA_BONUS: 3,            // bites for surviving the light
+  NEPA_BANNER_S: 1,         // "NEPA Took Light!" banner
+  UP_NEPA_TEXT_S: 1.3,      // "Up NEPA!" shout shown on screen
+  BULB_GLOW_R: 140,         // px, glow round the lit bulb
+  BULB_GLOW_ALPHA: 0.35,
+
+  // Fan and gusts (gusts move Amos's position, never his flap speed)
+  FAN_SPINUP_S: 0.6,        // fan spins (and wind lines show) before gusts start
+  GUST_RAMP_S: 0.6,         // gusts grow to full strength over this time
+  GUST_AMPLITUDE: 75,       // px/s peak drift (try 60–90)
+  GUST_PERIOD_S: 1.5,       // one up-and-down cycle
+  FAN_SHAKE_PX: 1,
+  CLOTHES_SWAY_PX: 5,       // visual only; hitboxes don't move
+  WIND_LINES: 12,
+  WIND_LINE_SPEED: 420,     // px/s, right to left
+  WIND_ALPHA_MIN: 0.25,     // wind lines while the fan spins up (warning)
+  WIND_ALPHA_MAX: 0.6,      // wind lines at full gust
+
   // --- Layout / feel ---
   MOSQUITO_X: 96,           // fixed horizontal centre of the mosquito
   MOSQUITO_START_Y: 300,
