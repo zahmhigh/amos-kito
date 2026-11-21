@@ -1,6 +1,5 @@
 .git
 .gitignore
-.nojekyll
 .assetsignore
 .claude
 README.md
