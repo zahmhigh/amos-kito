@@ -101,7 +101,7 @@ export const CONFIG = {
   NEPA_CUT_WARN_S: 0.35,    // warning: bulb stutters and gusts die down before the cut
   NEPA_BONUS: 3,            // bites for surviving the light
   NEPA_BANNER_S: 1,         // "NEPA Took Light!" banner
-  UP_NEPA_TEXT_S: 1.3,      // "Up NEPA!" shout shown on screen
+  UP_NEPA_TEXT_S: 1.7,      // "Up NEPA!" shout shown on screen (matches the recording)
   BULB_GLOW_R: 140,         // px, glow round the lit bulb
   BULB_GLOW_ALPHA: 0.35,
 
@@ -135,8 +135,8 @@ export const CONFIG = {
   // Voice lines only play from files. Setting a path for an effect
   // (switch, bulbBuzz, powerCut, slap) replaces its synthesised sound.
   AUDIO_FILES: {
-    upNepa: null,           // e.g. 'assets/audio/up_nepa.mp3'
-    nepaTookLight: null,    // e.g. 'assets/audio/nepa_took_light.mp3'
+    upNepa: 'assets/audio/up_nepa.mp3',
+    nepaTookLight: 'assets/audio/nepa_took_light.mp3',
     demDonSlapYou: 'assets/audio/dem_don_slap_you.mp3',
     switch: null,
     bulbBuzz: null,

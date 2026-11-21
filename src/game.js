@@ -260,6 +260,7 @@ export class Game {
     this.deathT = 0;
     this.mosquito.vy = 0;
     this.shakeT = CONFIG.SHAKE_S;
+    audio.stopVoices(); // cut any NEPA line so it doesn't talk over the slap line
     audio.play('slap');
     audio.play('demDonSlapYou', CONFIG.VOICE_AFTER_SLAP_S);
   }
