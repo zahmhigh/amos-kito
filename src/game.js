@@ -119,6 +119,7 @@ export class Game {
         if (performance.now() - this.gameOverAt < CONFIG.RESTART_LOCK_MS) return;
         // The Restart button, or a tap anywhere else: restart only, never a flap.
         // The new round waits on the "ready" screen for its first flap.
+        audio.stopVoices(); // don't let "Dem don slap you!" run into the new round
         this.resetRound();
         this.state = 'ready';
         break;

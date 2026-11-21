@@ -137,7 +137,7 @@ export const CONFIG = {
   AUDIO_FILES: {
     upNepa: null,           // e.g. 'assets/audio/up_nepa.mp3'
     nepaTookLight: null,    // e.g. 'assets/audio/nepa_took_light.mp3'
-    demDonSlapYou: null,    // e.g. 'assets/audio/dem_don_slap_you.mp3'
+    demDonSlapYou: 'assets/audio/dem_don_slap_you.mp3',
     switch: null,
     bulbBuzz: null,
     powerCut: null,

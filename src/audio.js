@@ -33,6 +33,7 @@ class GameAudio {
     this.hidden = false;   // tab hidden
     this.paused = false;   // game paused
     this.buffers = {};     // recorded one-shots, by key
+    this.voices = new Set(); // recorded clips currently playing
     this.noiseBuf = null;
     this.loops = null;
     this.fanOn = false;
@@ -218,6 +219,20 @@ class GameAudio {
     const g = this.gain(CONFIG.VOICE_VOL);
     s.connect(g).connect(this.master);
     s.start(t);
+    const voice = { s, g };
+    this.voices.add(voice);
+    s.onended = () => this.voices.delete(voice);
+  }
+
+  // Fade out and stop recorded clips still playing (e.g. on a quick restart).
+  stopVoices() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    for (const v of this.voices) {
+      v.g.gain.setTargetAtTime(0, t, 0.03);
+      try { v.s.stop(t + 0.15); } catch (e) { /* already stopped */ }
+    }
+    this.voices.clear();
   }
 
   // Recorded files from CONFIG.AUDIO_FILES (null entries are skipped).
