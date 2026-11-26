@@ -33,14 +33,19 @@ export const CONFIG = {
   SHAKE_PX: 5,
   SHAKE_S: 0.28,
 
-  // Game over: one of these rotates under "You no see road?!" (never the same
-  // twice in a row). Drafts: rewrite or add your own so they sound like real speech.
-  GAME_OVER_LINES: [
-    'Oga don wake.',
-    'Small blood, big wahala.',
-    'Na hand you go jam.',
-    'You no hear say e don wake?',
-  ],
+  // Game over: a line under "You no see road?!", chosen by what Amos crashed
+  // into. It's picked at random from that group plus "general" (the coil
+  // group covers its smoke too). If NEPA's light was on at the crash, only the
+  // "lit" group is used. Never the same line twice in a row when another is
+  // available. Add, edit or remove lines freely; an empty group is fine.
+  GAME_OVER_LINES: {
+    clothes: ['Wrapper don catch you.', 'Singlet don hold you.'],
+    bedpost: ['Bedpost no dey shift.', 'Na bedpost you wan bite?'],
+    coil: ['Coil don do im work.', 'Na coil smoke you dey sniff?'],
+    floor: ['Floor don collect you.', 'Jeje, Amos!'],
+    general: ['Small blood, big wahala.', 'Oga still dey sleep sha.', 'Even NEPA dey try pass you.'],
+    lit: ['Who on light?'],
+  },
 
   // --- Screen ---
   WIDTH: 360,

@@ -66,7 +66,7 @@ export class Game {
     this.debug = false;
     this.time = 0;
     this.state = 'title';
-    this.lastLine = -1;
+    this.lastLine = '';
     this.gameOverLine = '';
     this.resetRound();
   }
@@ -209,7 +209,8 @@ export class Game {
         this.obstacles.setBites(this.score); // difficulty ramp
         const passed = this.obstacles.update(dt, m.hitbox.x);
         this.score += passed + bonus;
-        if (this.checkHit()) this.startDeath();
+        const hit = this.checkHit();
+        if (hit) this.startDeath(hit);
         break;
       }
 
@@ -236,26 +237,36 @@ export class Game {
     return ((this.time / CONFIG.BREATH_PERIOD_S) % 1) * Math.PI * 2;
   }
 
-  pickGameOverLine() {
-    const lines = CONFIG.GAME_OVER_LINES;
-    if (!lines.length) { this.gameOverLine = ''; return; }
-    let i = Math.floor(Math.random() * lines.length);
-    if (lines.length > 1 && i === this.lastLine) i = (i + 1) % lines.length;
-    this.lastLine = i;
-    this.gameOverLine = lines[i];
+  // Game-over line, chosen by what Amos crashed into (see GAME_OVER_LINES in
+  // config.js). Light on: the "lit" group only. Otherwise: the cause's group
+  // plus the general group. Never the same line twice in a row when there's
+  // another to choose.
+  pickGameOverLine(cause, lit) {
+    const groups = CONFIG.GAME_OVER_LINES;
+    let pool = lit && groups.lit && groups.lit.length
+      ? groups.lit.slice()
+      : [...(groups[cause] || []), ...(groups.general || [])];
+    if (pool.length > 1) pool = pool.filter((l) => l !== this.lastLine);
+    if (!pool.length) { this.gameOverLine = ''; return; }
+    this.gameOverLine = pool[Math.floor(Math.random() * pool.length)];
+    this.lastLine = this.gameOverLine;
   }
 
+  // What Amos hit this step: 'floor', 'clothes', 'bedpost', 'coil' or null.
   checkHit() {
     const m = this.mosquito;
-    if (m.touchingFloor()) return true;
+    if (m.touchingFloor()) return 'floor';
     const hb = m.hitbox;
     for (const b of this.obstacles.hitboxes()) {
-      if (boxesOverlap(hb, b)) return true;
+      if (boxesOverlap(hb, b)) return b.key;
     }
-    return false;
+    return null;
   }
 
-  startDeath() {
+  startDeath(cause = 'floor') {
+    // Remember what he hit, and whether NEPA's light was on, for the game-over line.
+    this.crashCause = cause;
+    this.crashLit = this.nepa.isLit();
     this.state = 'dying';
     this.deathT = 0;
     this.mosquito.vy = 0;
@@ -289,7 +300,7 @@ export class Game {
   enterGameOver() {
     this.state = 'gameover';
     this.gameOverAt = performance.now();
-    this.pickGameOverLine();
+    this.pickGameOverLine(this.crashCause, this.crashLit);
     if (this.score > this.best) {
       this.best = this.score;
       this.newBest = true;

@@ -89,12 +89,15 @@ export class Obstacles {
     };
   }
 
+  // Every solid box, tagged with what it belongs to ('clothes', 'bedpost' or
+  // 'coil'; the coil's smoke box counts as 'coil').
   hitboxes() {
     const out = [];
     for (const p of this.pairs) {
       const r = this.rects(p);
-      out.push(...hitboxesFor(r.top.key, r.top.rect));
-      out.push(...hitboxesFor(r.bottom.key, r.bottom.rect));
+      for (const side of [r.top, r.bottom]) {
+        for (const b of hitboxesFor(side.key, side.rect)) out.push({ ...b, key: side.key });
+      }
     }
     return out;
   }

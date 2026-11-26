@@ -68,6 +68,21 @@ Each sprite's on-screen size and hitboxes are in the asset table at the top of [
 
 If an image fails to load, the game draws coloured boxes in its place, so it stays playable.
 
+### Game-over lines
+
+Under "You no see road?!", the game over screen shows a Pidgin line that matches what Amos crashed into. The lines live in `GAME_OVER_LINES` in `config.js`, in groups:
+
+| Group | Used when Amos hits |
+| --- | --- |
+| `clothes` | the clothes line |
+| `bedpost` | a bedpost |
+| `coil` | a mosquito coil or its smoke |
+| `floor` | the floor |
+| `general` | anything (mixed in with the group above) |
+| `lit` | anything while NEPA's light is on (used on its own) |
+
+The game picks at random from the crash's group plus `general`. If the light was on when he crashed, it uses the `lit` group instead. It never shows the same line twice in a row while there's another to choose. Edit, add or remove lines freely; an empty group is fine.
+
 ## Sound
 
 The buzz, snoring, distant generator, fan, light switch, bulb flicker, power cut and crash thud are all synthesised in code with the Web Audio API, so there are no sound licences to track. Sound starts on the first tap, as browsers require.
