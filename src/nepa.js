@@ -297,18 +297,22 @@ export class Nepa {
   }
 
   // Darken the background layer only. Called before obstacles and Amos are drawn.
+  // Even when lit, the room keeps some dimming (LIT_BG_DIM) so the bright, busy
+  // background never competes with the obstacles and Amos.
   drawDarkness(ctx) {
+    if (!this.darkLayer) this.darkLayer = this.buildDarkLayer();
+    if (!this.glowLayer) this.glowLayer = this.buildGlowLayer();
     const dark = 1 - this.light;
+    const litShare = CONFIG.LIT_BG_DIM / CONFIG.BG_DARKEN;
+    ctx.save();
+    ctx.globalAlpha = dark + this.light * litShare;
+    ctx.drawImage(this.darkLayer, 0, 0, W, H);
     if (dark > 0) {
-      if (!this.darkLayer) this.darkLayer = this.buildDarkLayer();
-      if (!this.glowLayer) this.glowLayer = this.buildGlowLayer();
-      ctx.save();
       ctx.globalAlpha = dark;
-      ctx.drawImage(this.darkLayer, 0, 0, W, H);
       ctx.globalCompositeOperation = 'lighter';
       ctx.drawImage(this.glowLayer, 0, 0, W, H);
-      ctx.restore();
     }
+    ctx.restore();
     this.drawBulbGlow(ctx);
   }
 

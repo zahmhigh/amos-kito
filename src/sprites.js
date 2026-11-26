@@ -55,6 +55,7 @@ export const ASSETS = {
     drawW: 80, drawH: CONFIG.CLOTHES_HEIGHT, offsetX: -5,
     anchor: 'bottom', // bottom garment sits at the gap, top runs off screen
     obstacle: true,
+    thumb: { x: 0, y: 512, w: 160, h: 258 }, // tutorial crop (source px): bottom garments
     hitboxes: [{ x: 8, w: 54, top: 0, bottom: 0 }],
     placeholder: [
       { x: 33, w: 4, top: 0, bottom: 0, color: '#8a7f73' },
@@ -72,6 +73,7 @@ export const ASSETS = {
     drawW: 70, drawH: 400, offsetX: 0,
     anchor: 'top', // carved top at the gap, base runs off the bottom
     obstacle: true,
+    thumb: { x: 0, y: 0, w: 140, h: 250 },   // tutorial crop: carved top
     hitboxes: [
       { x: 5, w: 60, top: 5, h: 48 },     // ball
       { x: 3, w: 64, top: 76, h: 22 },    // collar
@@ -89,6 +91,7 @@ export const ASSETS = {
     drawW: 70, drawH: 313.5, offsetX: 0,
     anchor: 'bottom', // coil fixed on the floor, smoke stretched/trimmed above
     obstacle: true,
+    thumb: { x: 0, y: 330, w: 140, h: 297 }, // tutorial crop: coil and its smoke
     hitboxes: [
       { x: 26, w: 26, top: 0, bottom: 40 }, // smoke column, ~26 px, full height
       { x: 2, w: 66, bottom: 16, h: 25 },   // coil
@@ -159,7 +162,8 @@ export const ASSETS = {
 
 const images = {};   // raw loaded images
 const baked = {};    // key -> { frames: [canvas], white: [canvas], pad }  (outlined sprites)
-const darkened = {}; // key -> canvas (obstacles, lightly darkened)
+const darkened = {}; // key -> canvas (obstacles: outlined, lightly darkened, for the dark room)
+const litArt = {};   // key -> canvas (obstacles: outlined, full colour, for the lit room)
 
 // Supersample factor for baked sprites, so they stay sharp on phone screens.
 const BAKE_SCALE = 2;
@@ -189,13 +193,27 @@ function silhouette(src, color) {
   return c;
 }
 
-// Bake each frame at display size (x BAKE_SCALE) with a thin cream outline,
-// plus an all-white version for the hit flash.
+// Stamp a silhouette in a ring around the shape (a crisp outline).
+function stampRing(ctx, sil, radius, alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const steps = 16;
+  for (let i = 0; i < steps; i++) {
+    const t = (i / steps) * Math.PI * 2;
+    ctx.drawImage(sil, Math.cos(t) * radius, Math.sin(t) * radius);
+  }
+  ctx.restore();
+}
+
+// Bake each frame at display size (x BAKE_SCALE) with a thin cream outline and
+// a dark edge outside it, so Amos stands out on the dark room and the lit one.
+// Also an all-white version for the hit flash.
 function bakeOutlined(key, img) {
   const a = ASSETS[key];
   const s = (a.drawW / a.frameW) * BAKE_SCALE;
   const ow = CONFIG.OUTLINE_PX * BAKE_SCALE;
-  const pad = Math.ceil(ow) + 1;
+  const dw = ow + CONFIG.OUTLINE_DARK_PX * BAKE_SCALE;
+  const pad = Math.ceil(dw) + 1;
   const fw = a.frameW * s;
   const fh = a.frameH * s;
   const frames = [];
@@ -204,14 +222,10 @@ function bakeOutlined(key, img) {
     const plain = makeCanvas(fw + pad * 2, fh + pad * 2);
     plain.getContext('2d').drawImage(img, f * a.frameW, 0, a.frameW, a.frameH, pad, pad, fw, fh);
 
-    const sil = silhouette(plain, CONFIG.OUTLINE_COLOR);
     const out = makeCanvas(plain.width, plain.height);
     const ox = out.getContext('2d');
-    const steps = 16;
-    for (let i = 0; i < steps; i++) {
-      const t = (i / steps) * Math.PI * 2;
-      ox.drawImage(sil, Math.cos(t) * ow, Math.sin(t) * ow);
-    }
+    stampRing(ox, silhouette(plain, CONFIG.OUTLINE_DARK_COLOR), dw, CONFIG.OUTLINE_DARK_ALPHA);
+    stampRing(ox, silhouette(plain, CONFIG.OUTLINE_COLOR), ow);
     ox.drawImage(plain, 0, 0);
     frames.push(out);
     white.push(silhouette(plain, '#ffffff'));
@@ -219,14 +233,28 @@ function bakeOutlined(key, img) {
   baked[key] = { frames, white, pad: pad / BAKE_SCALE };
 }
 
-function bakeDarkened(key, img) {
-  const c = makeCanvas(img.width, img.height);
+// Obstacles get a dark outline so they separate from the busy room, plus a
+// lightly darkened copy for when the room is dark.
+function outlinedObstacle(src, scale) {
+  const c = makeCanvas(src.width, src.height);
   const x = c.getContext('2d');
+  const r = CONFIG.OBSTACLE_OUTLINE_PX / scale; // screen px -> source px
+  stampRing(x, silhouette(src, CONFIG.OBSTACLE_OUTLINE_COLOR), r, CONFIG.OBSTACLE_OUTLINE_ALPHA);
+  x.drawImage(src, 0, 0);
+  return c;
+}
+
+function bakeObstacle(key, img) {
+  const a = ASSETS[key];
+  const scale = a.drawW / a.frameW;
+  const dim = makeCanvas(img.width, img.height);
+  const x = dim.getContext('2d');
   x.drawImage(img, 0, 0);
   x.globalCompositeOperation = 'source-atop';
   x.fillStyle = `rgba(0,0,0,${CONFIG.OBSTACLE_DARKEN})`;
-  x.fillRect(0, 0, c.width, c.height);
-  darkened[key] = c;
+  x.fillRect(0, 0, dim.width, dim.height);
+  darkened[key] = outlinedObstacle(dim, scale);
+  litArt[key] = outlinedObstacle(img, scale);
 }
 
 // Load every asset. A file that fails to load keeps its coloured-box fallback.
@@ -237,7 +265,7 @@ export function loadAssets() {
       try {
         images[key] = img;
         if (a.outline) bakeOutlined(key, img);
-        if (a.obstacle) bakeDarkened(key, img);
+        if (a.obstacle) bakeObstacle(key, img);
       } catch (e) {
         delete images[key]; // baking failed: fall back to boxes
       }
@@ -317,7 +345,7 @@ export function buildCoilArt(lengthPx) {
   if (!images.coil) return null;
   return {
     dark: fitCoil(darkened.coil || images.coil, lengthPx),
-    lit: fitCoil(images.coil, lengthPx),
+    lit: fitCoil(litArt.coil || images.coil, lengthPx),
   };
 }
 
@@ -359,7 +387,7 @@ function fitCoil(src, lengthPx) {
 // original. `sway` (px) leans the hanging clothes in the wind (visual only).
 export function drawObstacle(ctx, key, rect, cache, { lit = false, sway = 0 } = {}) {
   const a = ASSETS[key];
-  const img = lit ? images[key] : (darkened[key] || images[key]);
+  const img = (lit ? litArt[key] : darkened[key]) || images[key];
   if (!img) { drawPlaceholder(ctx, key, rect); return; }
   const x = rect.x + (a.offsetX || 0);
 
@@ -384,4 +412,22 @@ export function drawObstacle(ctx, key, rect, cache, { lit = false, sway = 0 } = 
     // Top of the image at the rect's top; the base runs off the bottom.
     ctx.drawImage(img, x, rect.y, a.drawW, a.drawH);
   }
+}
+
+// Draw an obstacle's tutorial thumbnail (its "thumb" crop) fitted inside box,
+// centred and bottom-aligned. Falls back to its placeholder colours.
+export function drawThumb(ctx, key, box) {
+  const a = ASSETS[key];
+  const img = litArt[key] || images[key];
+  const c = a.thumb;
+  const s = Math.min(box.w / c.w, box.h / c.h);
+  const w = c.w * s;
+  const h = c.h * s;
+  const x = box.x + (box.w - w) / 2;
+  const y = box.y + box.h - h;
+  if (!img) {
+    drawPlaceholder(ctx, key, { x, y, w, h });
+    return;
+  }
+  ctx.drawImage(img, c.x, c.y, c.w, c.h, x, y, w, h);
 }

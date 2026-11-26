@@ -77,6 +77,14 @@ export const CONFIG = {
   OBSTACLE_DARKEN: 0.15,    // obstacles only lightly darkened, edges stay clear
   OUTLINE_COLOR: '#fff1d0', // thin crisp cream outline around Amos
   OUTLINE_PX: 1.5,          // outline width (1–2 px)
+  OUTLINE_DARK_COLOR: '#1a120c', // dark edge outside the cream outline, so Amos
+  OUTLINE_DARK_PX: 1,       //   also stands out against the bright lit room
+  OUTLINE_DARK_ALPHA: 0.85,
+  OBSTACLE_OUTLINE_COLOR: '#1a120c', // dark outline round every obstacle (and the smoke)
+  OBSTACLE_OUTLINE_PX: 1.5,
+  OBSTACLE_OUTLINE_ALPHA: 0.9,
+  LIT_BG_DIM: 0.35,         // background stays this dark when NEPA brings light,
+                            //   so obstacles and Amos stay easy to see
   BULB_X: 181,              // painted ceiling bulb centre
   BULB_Y: 55,
   LAMP_X: 78,               // rechargeable lamp centre
@@ -108,14 +116,14 @@ export const CONFIG = {
   // Fan and gusts (gusts move Amos's position, never his flap speed)
   FAN_SPINUP_S: 0.6,        // fan spins (and wind lines show) before gusts start
   GUST_RAMP_S: 0.6,         // gusts grow to full strength over this time
-  GUST_AMPLITUDE: 75,       // px/s peak drift (try 60–90)
+  GUST_AMPLITUDE: 60,       // px/s peak drift (spec range 60–90; lowered after player feedback)
   GUST_PERIOD_S: 1.5,       // one up-and-down cycle
   FAN_SHAKE_PX: 1,
   CLOTHES_SWAY_PX: 5,       // visual only; hitboxes don't move
   WIND_LINES: 12,
   WIND_LINE_SPEED: 420,     // px/s, right to left
-  WIND_ALPHA_MIN: 0.25,     // wind lines while the fan spins up (warning)
-  WIND_ALPHA_MAX: 0.6,      // wind lines at full gust
+  WIND_ALPHA_MIN: 0.2,      // wind lines while the fan spins up (warning)
+  WIND_ALPHA_MAX: 0.4,      // wind lines at full gust (drawn behind obstacles)
 
   // --- Sound (Phase 4) ---
   MASTER_VOLUME: 0.8,

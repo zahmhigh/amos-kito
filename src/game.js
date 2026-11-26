@@ -5,7 +5,7 @@ import { Mosquito } from './mosquito.js';
 import { Obstacles } from './obstacles.js';
 import { Nepa } from './nepa.js';
 import { audio } from './audio.js';
-import { ASSETS, drawAsset, boxesOverlap, hasImage } from './sprites.js';
+import { ASSETS, drawAsset, drawThumb, boxesOverlap, hasImage } from './sprites.js';
 
 const W = CONFIG.WIDTH;
 const H = CONFIG.HEIGHT;
@@ -312,8 +312,8 @@ export class Game {
       ctx.translate(-W / 2, -H / 2);
     }
     this.drawRoom(ctx);
+    this.nepa.drawWind(ctx); // behind the obstacles, so it never hides them
     this.obstacles.draw(ctx, { lit: this.nepa.isLit(), sway: this.nepa.clothesSway() });
-    this.nepa.drawWind(ctx);
 
     if (this.state !== 'gameover') {
       const flashS = CONFIG.DEATH_FLASH_MS / 1000;
@@ -439,23 +439,53 @@ export class Game {
     this.drawText(ctx, `Bites: ${this.score}`, W / 2, 48, 30);
   }
 
-  drawHint(ctx, text) {
+  drawHint(ctx, text, y = 420) {
     const a = 0.6 + 0.4 * Math.sin(this.time * 5);
     ctx.globalAlpha = a;
-    this.drawText(ctx, text, W / 2, 420, 26, '#ffe08a');
+    this.drawText(ctx, text, W / 2, y, 26, '#ffe08a');
     ctx.globalAlpha = 1;
   }
 
   drawTitle(ctx) {
     if (hasImage('logo')) {
       const a = ASSETS.logo;
-      drawAsset(ctx, 'logo', { x: (W - a.drawW) / 2, y: 60, w: a.drawW, h: a.drawH });
+      drawAsset(ctx, 'logo', { x: (W - a.drawW) / 2, y: 14, w: a.drawW, h: a.drawH });
     } else {
-      this.drawText(ctx, 'Amos Kito', W / 2, 150, 52, '#ffd23f');
-      this.drawText(ctx, 'E No Let Me Sleep!', W / 2, 200, 24, '#fff');
+      this.drawText(ctx, 'Amos Kito', W / 2, 80, 52, '#ffd23f');
+      this.drawText(ctx, 'E No Let Me Sleep!', W / 2, 130, 24, '#fff');
     }
-    this.drawHint(ctx, 'Tap to fly');
-    if (this.best > 0) this.drawText(ctx, `Best: ${this.best} Bites`, W / 2, 470, 18, '#cfd8e3');
+    if (this.best > 0) this.drawText(ctx, `Best: ${this.best} Bites`, W / 2, 184, 16, '#cfd8e3');
+    this.drawTutorial(ctx);
+    this.drawHint(ctx, 'Tap to fly', 612);
+  }
+
+  // "Dodge these!" card: the three obstacles with their real art, plus tips.
+  drawTutorial(ctx) {
+    const card = { x: 14, y: 344, w: W - 28, h: 238 };
+    ctx.save();
+    ctx.fillStyle = 'rgba(8,10,20,0.78)';
+    ctx.strokeStyle = 'rgba(255,210,63,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(card.x, card.y, card.w, card.h, 16) : ctx.rect(card.x, card.y, card.w, card.h);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    this.drawText(ctx, 'Dodge these!', W / 2, card.y + 22, 20, '#ffd23f');
+    const items = [
+      ['clothes', 'Clothes line'],
+      ['bedpost', 'Bedpost'],
+      ['coil', 'Coil + smoke'],
+    ];
+    const colW = card.w / items.length;
+    items.forEach(([key, label], i) => {
+      const cx = card.x + colW * i + colW / 2;
+      drawThumb(ctx, key, { x: cx - 40, y: card.y + 42, w: 80, h: 96 });
+      this.drawText(ctx, label, cx, card.y + 154, 15, '#ffffff');
+    });
+    this.drawText(ctx, 'Tap to flap through the gaps.', W / 2, card.y + 186, 15, '#ffe7c2');
+    this.drawText(ctx, 'When NEPA brings light, the fan blows you!', W / 2, card.y + 212, 14, '#9fd3ff');
   }
 
   drawPaused(ctx) {
