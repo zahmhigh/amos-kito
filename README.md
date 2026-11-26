@@ -1,6 +1,6 @@
 # Amos Kito: E No Let Me Sleep!
 
-A one-tap browser game set in a Nigerian bedroom at night. You are **Amos Kito**, a cheeky mosquito trying to reach the man asleep under his wrapper, while hanging clothes, bedposts and mosquito coils drift across the room. Touch anything and *dem don slap you*.
+A one-tap browser game set in a Nigerian bedroom at night. You are **Amos Kito**, a cheeky mosquito trying to reach the man asleep under his wrapper, while hanging clothes, bedposts and mosquito coils drift across the room. Touch anything and Amos crashes: *You no see road?!*
 
 **Play it:** https://amos-kito.banjezamai.workers.dev/
 
@@ -10,10 +10,10 @@ A one-tap browser game set in a Nigerian bedroom at night. You are **Amos Kito**
 
 - **Tap, click or press Space** to flap. Gravity pulls Amos down between flaps.
 - Fly through the gap in each pair of obstacles to earn a **Bite**.
-- Hit the clothes, a bedpost, the coil or its smoke, or the floor, and you're slapped.
+- Hit the clothes, a bedpost, the coil or its smoke, or the floor, and Amos crashes.
 - **NEPA brings light.** Every so often the power comes back. The bulb flickers, someone shouts "Up NEPA!", the room lights up, the sleeper half-wakes and the fan blows gusts that push Amos up and down. Survive until the power cuts again ("NEPA Took Light!") for **+3 Bites**.
 - The game speeds up and the gaps narrow as your score climbs.
-- After a slap, tap **Fly again** to restart, or **Share score** to send your score to friends.
+- After a crash, tap **Fly again** to restart, or **Share score** to send your score to friends.
 
 ### Keys
 
@@ -70,9 +70,9 @@ If an image fails to load, the game draws coloured boxes in its place, so it sta
 
 ## Sound
 
-The buzz, snoring, distant generator, fan, light switch, bulb flicker, power cut and slap are all synthesised in code with the Web Audio API, so there are no sound licences to track. Sound starts on the first tap, as browsers require.
+The buzz, snoring, distant generator, fan, light switch, bulb flicker, power cut and crash thud are all synthesised in code with the Web Audio API, so there are no sound licences to track. Sound starts on the first tap, as browsers require.
 
-The voice lines are recordings in `assets/audio/`, listed in `AUDIO_FILES` in `config.js`. To add or replace a sound, put the file in `assets/audio/` and set its path there. Setting a path for an effect (`switch`, `bulbBuzz`, `powerCut`, `slap`) replaces the synthesised version.
+The voice lines are recordings in `assets/audio/`, listed in `AUDIO_FILES` in `config.js`. To add or replace a sound, put the file in `assets/audio/` and set its path there. Setting a path for an effect (`switch`, `bulbBuzz`, `powerCut`, `thud`) replaces the synthesised version.
 
 The game shows every voice line as text too, so it stays clear with the sound off.
 

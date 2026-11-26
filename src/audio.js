@@ -1,10 +1,10 @@
 // Sound: Web Audio, started on the first tap, with a remembered mute toggle.
 //
 // Effects (buzz, snoring, generator, fan, switch click, bulb buzz, power cut,
-// slap) are synthesised in code, so there are no licences to worry about.
+// crash thud) are synthesised in code, so there are no licences to worry about.
 // Any one-shot can be replaced by a recording: put the file in assets/audio/
 // and set its path in CONFIG.AUDIO_FILES. Voice lines ("Up NEPA!",
-// "NEPA Took Light!", "Dem don slap you!") only play once a file is set; the
+// "NEPA Took Light!", "You no see road?!") only play once a file is set; the
 // game shows them as text either way, so it stays clear with sound off.
 
 import { CONFIG } from './config.js';
@@ -323,31 +323,34 @@ GameAudio.prototype.synths = {
     o.stop(t + 0.45);
   },
 
-  // A sharp slap: bright noise crack plus a body thump.
-  slap(t) {
-    const n = this.noiseSource(false);
-    const f = this.filter('lowpass', 7000, 0.8);
-    f.frequency.setValueAtTime(7000, t);
-    f.frequency.exponentialRampToValueAtTime(900, t + 0.12);
+  // Crash: a dull, low bump (about 120 -> 70 Hz, gone within ~0.15 s) with a
+  // soft click on impact, like a small body hitting cloth or wood. A triangle
+  // wave keeps a little upper harmonic so phone speakers can still play it.
+  thud(t) {
+    const v = CONFIG.THUD_VOL;
+    const o = this.osc('triangle', 120);
+    o.frequency.setValueAtTime(120, t);
+    o.frequency.exponentialRampToValueAtTime(70, t + 0.12);
+    const lp = this.filter('lowpass', 600, 0.7);
     const g = this.gain(0);
-    n.connect(f).connect(g).connect(this.master);
-    this.env(g, t, CONFIG.SLAP_VOL, 0.002, 0.14);
-    n.start(t);
-    n.stop(t + 0.2);
-    const o = this.osc('sine', 160);
-    const og = this.gain(0);
-    o.frequency.setValueAtTime(160, t);
-    o.frequency.exponentialRampToValueAtTime(55, t + 0.15);
-    o.connect(og).connect(this.master);
-    this.env(og, t, CONFIG.SLAP_VOL * 0.8, 0.003, 0.16);
+    o.connect(lp).connect(g).connect(this.master);
+    this.env(g, t, v, 0.003, 0.13);
     o.start(t);
-    o.stop(t + 0.25);
+    o.stop(t + 0.2);
+
+    const n = this.noiseSource(false);
+    const bp = this.filter('bandpass', 1800, 0.9);
+    const ng = this.gain(0);
+    n.connect(bp).connect(ng).connect(this.master);
+    this.env(ng, t, v * 0.35, 0.001, 0.012);
+    n.start(t);
+    n.stop(t + 0.03);
   },
 
   // Voice lines have no synth: they play only from recorded files.
   upNepa() {},
   nepaTookLight() {},
-  demDonSlapYou() {},
+  youNoSeeRoad() {},
 };
 
 export const audio = new GameAudio();

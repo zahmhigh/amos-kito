@@ -119,7 +119,7 @@ export class Game {
         if (performance.now() - this.gameOverAt < CONFIG.RESTART_LOCK_MS) return;
         // The Restart button, or a tap anywhere else: restart only, never a flap.
         // The new round waits on the "ready" screen for its first flap.
-        audio.stopVoices(); // don't let "Dem don slap you!" run into the new round
+        audio.stopVoices(); // don't let a voice line run into the new round
         this.resetRound();
         this.state = 'ready';
         break;
@@ -260,9 +260,9 @@ export class Game {
     this.deathT = 0;
     this.mosquito.vy = 0;
     this.shakeT = CONFIG.SHAKE_S;
-    audio.stopVoices(); // cut any NEPA line so it doesn't talk over the slap line
-    audio.play('slap');
-    audio.play('demDonSlapYou', CONFIG.VOICE_AFTER_SLAP_S);
+    audio.stopVoices(); // cut any NEPA line so it doesn't talk over the crash line
+    audio.play('thud');
+    audio.play('youNoSeeRoad', CONFIG.VOICE_AFTER_CRASH_S);
   }
 
   updateDeath(dt) {
@@ -301,7 +301,7 @@ export class Game {
 
   draw(ctx) {
     // Layers: room (darkened) -> obstacles -> Amos -> score, text and buttons.
-    // The slap shakes the world layers only; text and buttons stay steady.
+    // The crash shakes the world layers only; text and buttons stay steady.
     ctx.save();
     if (this.shakeT > 0) {
       const k = this.shakeT / CONFIG.SHAKE_S;
@@ -501,7 +501,7 @@ export class Game {
     const dw = CONFIG.DAZED_GAMEOVER_W;
     const dh = ASSETS.mosquito_dazed.frameH * (dw / ASSETS.mosquito_dazed.frameW);
     drawAsset(ctx, 'mosquito_dazed', { x: (W - dw) / 2, y: 270 - 24 - dh, w: dw, h: dh });
-    this.drawText(ctx, 'Dem don slap you!', W / 2, 290, 32, '#ff6b5b');
+    this.drawText(ctx, 'You no see road?!', W / 2, 290, 32, '#ff6b5b');
     if (this.gameOverLine) this.drawText(ctx, this.gameOverLine, W / 2, 328, 18, '#ffe7c2');
     this.drawText(ctx, `Bites: ${this.score}`, W / 2, 380, 28);
     this.drawText(ctx, `Best: ${this.best}`, W / 2, 418, 22, '#cfd8e3');

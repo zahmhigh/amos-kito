@@ -29,11 +29,11 @@ export const CONFIG = {
   RAMP_GAP_EVERY: 5,        // ...every 5 bites
   RAMP_GAP_MIN: 150,        // px floor
 
-  // Screen shake on the slap
+  // Screen shake on the crash
   SHAKE_PX: 5,
   SHAKE_S: 0.28,
 
-  // Game over: one of these rotates under "Dem don slap you!" (never the same
+  // Game over: one of these rotates under "You no see road?!" (never the same
   // twice in a row). Drafts: rewrite or add your own so they sound like real speech.
   GAME_OVER_LINES: [
     'Oga don wake.',
@@ -136,20 +136,20 @@ export const CONFIG = {
   FAN_VOL: 0.12,
   FAN_WINDDOWN_S: 0.9,
   BULB_BUZZ_VOL: 0.08,
-  SLAP_VOL: 0.7,
+  THUD_VOL: 0.8,             // crash thud when Amos hits something
   VOICE_VOL: 1,
-  VOICE_AFTER_SLAP_S: 0.3,  // "Dem don slap you!" starts this long after the slap
+  VOICE_AFTER_CRASH_S: 0.3, // "You no see road?!" starts this long after the crash
   // Recorded files (put them in assets/audio/ and set the path; null = none).
   // Voice lines only play from files. Setting a path for an effect
-  // (switch, bulbBuzz, powerCut, slap) replaces its synthesised sound.
+  // (switch, bulbBuzz, powerCut, thud) replaces its synthesised sound.
   AUDIO_FILES: {
     upNepa: 'assets/audio/up_nepa.mp3',
     nepaTookLight: 'assets/audio/nepa_took_light.mp3',
-    demDonSlapYou: 'assets/audio/dem_don_slap_you.mp3',
+    youNoSeeRoad: null,     // set to 'assets/audio/you_no_see_road.mp3' once recorded
     switch: null,
     bulbBuzz: null,
     powerCut: null,
-    slap: null,
+    thud: null,
   },
 
   // Mute button (top right)
