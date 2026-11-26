@@ -44,7 +44,7 @@ export const CONFIG = {
     coil: ['Coil don do im work.', 'Na coil smoke you dey sniff?'],
     floor: ['Floor don collect you.', 'Jeje, Amos!'],
     general: ['Small blood, big wahala.', 'Oga still dey sleep sha.', 'Even NEPA dey try pass you.'],
-    lit: ['Who on light?'],
+    lit: ['Who on light?', 'Light don expose you.'],
   },
 
   // --- Screen ---
