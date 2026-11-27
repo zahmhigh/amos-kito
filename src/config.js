@@ -21,7 +21,7 @@ export const CONFIG = {
   DEATH_DAZED_S: 0.5,       // dazed image in the room before game over
 
   // Difficulty ramp (Phase 4). Starts from SCROLL_SPEED and GAP_SIZE.
-  RAMP_START_BITES: 0,      // bites before the ramp begins (raise to give a grace period)
+  RAMP_START_BITES: 20,     // bites before the ramp begins, so the first 20 feel unchanged
   RAMP_SPEED_STEP: 5,       // +px/s...
   RAMP_SPEED_EVERY: 10,     // ...every 10 bites
   RAMP_SPEED_MAX: 260,      // px/s cap
@@ -171,7 +171,7 @@ export const CONFIG = {
 
   // --- Sharing (Phase 5) ---
   // Shared links always point here, wherever the game was played.
-  SHARE_URL: 'https://amos-kito.banjezamai.workers.dev/',
+  SHARE_URL: 'https://amoskito.app/',
   SHARE_TEXT: 'Amos Kito survived {n}. This mosquito no gree sleep. Beat my score!',
   TOAST_MS: 1600,
 

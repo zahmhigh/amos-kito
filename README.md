@@ -2,7 +2,7 @@
 
 A one-tap browser game set in a Nigerian bedroom at night. You are **Amos Kito**, a cheeky mosquito trying to reach the man asleep under his wrapper, while hanging clothes, bedposts and mosquito coils drift across the room. Touch anything and Amos crashes: *You no see road?!*
 
-**Play it:** https://amos-kito.banjezamai.workers.dev/
+**Play it:** https://amoskito.app/
 
 ![Amos Kito flying over the sleeping man](assets/images/preview.jpg)
 
@@ -12,7 +12,7 @@ A one-tap browser game set in a Nigerian bedroom at night. You are **Amos Kito**
 - Fly through the gap in each pair of obstacles to earn a **Bite**.
 - Hit the clothes, a bedpost, the coil or its smoke, or the floor, and Amos crashes.
 - **NEPA brings light.** Every so often the power comes back. The bulb flickers, someone shouts "Up NEPA!", the room lights up, the sleeper half-wakes and the fan blows gusts that push Amos up and down. Survive until the power cuts again ("NEPA Took Light!") for **+3 Bites**.
-- The game speeds up and the gaps narrow as your score climbs.
+- After your first 20 Bites, the game speeds up and the gaps narrow as your score climbs.
 - After a crash, tap **Fly again** to restart, or **Share score** to send your score to friends.
 
 ### Keys
