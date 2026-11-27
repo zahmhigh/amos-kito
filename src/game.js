@@ -136,9 +136,13 @@ export class Game {
   }
 
   // Phone share sheet if there is one, otherwise copy the message and link.
+  // Each score gets its own link (e.g. https://amoskito.app/?s=86). It opens
+  // the same page, but WhatsApp caches link previews per exact link, so a
+  // fresh link makes it fetch a fresh preview instead of reusing an old,
+  // failed one.
   share() {
     const text = shareMessage(this.score);
-    const url = CONFIG.SHARE_URL;
+    const url = `${CONFIG.SHARE_URL}?s=${this.score}`;
     if (navigator.share) {
       navigator.share({ title: document.title, text, url }).catch((e) => {
         // Cancelled by the player: do nothing. Any other failure: copy instead.
