@@ -93,9 +93,16 @@ The game shows every voice line as text too, so it stays clear with the sound of
 
 ## Deploying
 
-The game is hosted on Cloudflare, connected to this repository. Every push to `main` goes live automatically within a minute or two. [`.assetsignore`](.assetsignore) keeps repo files such as this README off the public site.
+The game lives at **https://amoskito.app/**, hosted on Cloudflare and connected to this repository. Every push to `main` goes live automatically, usually within two minutes, sometimes up to about five. [`.assetsignore`](.assetsignore) keeps repo files such as this README off the public site.
 
-Any static host works, since the site is just these files: Netlify, Vercel or GitHub Pages included. If the address changes, update `SHARE_URL` in `config.js` and the `og:url`, `og:image` and `canonical` addresses in `index.html`, so shared links and WhatsApp previews point to the right place.
+The original Cloudflare address, https://amos-kito.banjezamai.workers.dev/, serves the same build. Keep it switched on so links people shared before the move still open the game. Sharing from either address links to `amoskito.app`.
+
+`amoskito.app` is the main address in these places, so shared links and link previews (WhatsApp, X, Telegram) point to it:
+
+- `SHARE_URL` in [`src/config.js`](src/config.js)
+- `canonical`, `og:url`, `og:image`, `og:image:secure_url` and `twitter:image` in [`index.html`](index.html)
+
+If the address ever changes, update all of those. Any static host works, since the site is just these files: Netlify, Vercel or GitHub Pages included.
 
 ## Size
 
