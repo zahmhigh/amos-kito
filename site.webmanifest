@@ -1,0 +1,12 @@
+{
+  "name": "Amos Kito: E No Let Me Sleep!",
+  "short_name": "Amos Kito",
+  "start_url": "/",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "display": "standalone",
+  "background_color": "#181628",
+  "theme_color": "#181628"
+}
