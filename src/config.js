@@ -150,7 +150,7 @@ export const CONFIG = {
   AUDIO_FILES: {
     upNepa: 'assets/audio/up_nepa.mp3',
     nepaTookLight: 'assets/audio/nepa_took_light.mp3',
-    youNoSeeRoad: null,     // set to 'assets/audio/you_no_see_road.mp3' once recorded
+    youNoSeeRoad: 'assets/audio/you_no_see_road.mp3',
     switch: null,
     bulbBuzz: null,
     powerCut: null,

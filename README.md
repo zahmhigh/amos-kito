@@ -106,7 +106,7 @@ If the address ever changes, update all of those. Any static host works, since t
 
 ## Size
 
-A player downloads about 530 KB in total (code, art and voice lines), well under the 2 MB budget for loading quickly over mobile data.
+A player downloads about 550 KB in total (code, art and voice lines), well under the 2 MB budget for loading quickly over mobile data.
 
 ## Credits
 
